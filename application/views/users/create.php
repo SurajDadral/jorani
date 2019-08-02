@@ -8,6 +8,33 @@
  */
 ?>
 
+
+<style>
+#frmSelectManager{
+ top:0%;
+left:0%;
+ width :80%;
+margin :5% 10%;
+height :80%;
+
+
+}
+.modal-header{
+height:5%;
+}
+.modal-footer{
+height:5%;
+}
+.modal-body{
+
+max-height:85%;
+
+
+}
+
+
+</style>
+
 <div class="row-fluid">
     <div class="span12">
 <h2><?php echo lang('users_create_title');?><?php echo $help;?></h2>
@@ -69,8 +96,13 @@ echo form_open('users/create', $attributes); ?>
     </div>
 
     <div class="span8">
-        <input type="hidden" name="manager" id="manager" />
-        <div class="control-group">
+      <!--  <input type="hidden" name="manager[]" id="manager" />
+       -->
+	 <select name="managerS[]"  size="1" multiple="multiple"  id="managerS" required readonly>
+         </select>
+
+
+	 <div class="control-group">
             <label class="control-label" for="txtManager">
                 <?php echo lang('users_create_field_manager');?>
                 <a style="color:black;" href="#" data-toggle="tooltip" title="<?php echo lang('users_create_field_manager_description');?>">
@@ -276,8 +308,14 @@ echo form_open('users/create', $attributes); ?>
         <img src="<?php echo base_url();?>assets/images/loading.gif">
     </div>
     <div class="modal-footer">
-        <a href="#" onclick="select_manager();" class="btn"><?php echo lang('users_create_popup_manager_button_ok');?></a>
-        <a href="#" onclick="$('#frmSelectManager').modal('hide');" class="btn"><?php echo lang('users_create_popup_manager_button_cancel');?></a>
+
+<!---->
+    <a href="#"  class="btn btn-primary"><?php echo "Add manager";?></a>
+        <a href="#"  class="btn btn-primary"><?php echo "Remove manager";?></a>
+<!---->   
+	<a href="#" onclick="select_manager();" class="btn"><?php echo lang('users_create_popup_manager_button_ok');?></a>
+<!--        <a href="#" onclick="$('#frmSelectManager').modal('hide');" class="btn"><?php echo lang('users_create_popup_manager_button_cancel');?></a>
+-->
     </div>
 </div>
 
@@ -323,11 +361,31 @@ echo form_open('users/create', $attributes); ?>
     //Popup select postion: on click OK, find the user id for the selected line
     function select_manager() {
         var employees = $('#employees').DataTable();
-        if ( employees.rows({ selected: true }).any() ) {
-            var manager = employees.rows({selected: true}).data()[0][0];
-            var text = employees.rows({selected: true}).data()[0][1] + ' ' + employees.rows({selected: true}).data()[0][2];
-            $('#manager').val(manager);
+        if ( employees.rows({ selected: true }).any() ) { alert("got");	
+//shiv
+var manager=new Array();
+var val =employees.rows().data().toArray();
+
+$.each(val,function(index,val){
+$('#managerS').append($('<option>',{value:val['id'],selected:"selected",text:val['firstname']}));
+ manager.push( val['id']);
+});
+//console.log(manager);
+
+
+//shiv
+//            var manager = employees.rows({selected: true}).data()[0][0];
+            var text = employees.rows({selected: true}).data()[0]['firstname'] + ' ' + employees.rows({selected: true}).data()[0][2];
+  //          $('#manager').val(manager[]);
             $('#txtManager').val(text);
+       var options=$('#managerS option');
+//    options.select().all();
+ var manval=$.map(options,function(option){
+	return option.value ;
+	});
+ var sel =$("#managerS option:selected").val();
+ alert(sel);
+	alert(manval +"shiv");
         }
         $("#frmSelectManager").modal('hide');
     }
