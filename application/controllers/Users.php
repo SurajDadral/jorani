@@ -86,7 +86,9 @@ class Users extends CI_Controller {
         $this->lang->load('datatable', $this->language);
         $data['employees'] = $this->users_model->getAllEmployees();
         $data['title'] = lang('employees_index_title');
-        $this->load->view('users/employees', $data);
+//	$this->load->view('multi_level/level', $data);
+        $this->load->view('multi_level/seletlevel');
+
     }
 
     /**
@@ -309,7 +311,7 @@ class Users extends CI_Controller {
         $this->form_validation->set_rules('email', lang('users_create_field_email'), 'required|strip_tags');
         if (!$this->config->item('ldap_enabled')) $this->form_validation->set_rules('CipheredValue', lang('users_create_field_password'), 'required');
         $this->form_validation->set_rules('role[]', lang('users_create_field_role'), 'required');
-        $this->form_validation->set_rules('manager', lang('users_create_field_manager'), 'required|strip_tags');
+        $this->form_validation->set_rules('managerS[]', lang('users_create_field_manager'), 'required|strip_tags');
         $this->form_validation->set_rules('contract', lang('users_create_field_contract'), 'strip_tags');
         $this->form_validation->set_rules('position', lang('users_create_field_position'), 'strip_tags');
         $this->form_validation->set_rules('entity', lang('users_create_field_entity'), 'strip_tags');
