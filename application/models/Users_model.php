@@ -8,7 +8,9 @@
  */
 
 if (!defined('BASEPATH')) { exit('No direct script access allowed'); }
-
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 /**
  * This model contains the business logic and manages the persistence of users (employees)
  * It is also used by the session controller for the authentication.
@@ -202,13 +204,43 @@ class Users_model extends CI_Model {
             'email' => $this->input->post('email'),
             'password' => $hash,
             'role' => $role,
-            'manager' => $this->input->post('manager'),
+        //    'manager' => $this->input->post('manager'),
             'contract' => $this->input->post('contract'),
             'identifier' => $this->input->post('identifier'),
             'language' => $this->input->post('language'),
             'timezone' => $this->input->post('timezone'),
             'random_hash' => rtrim(strtr(base64_encode($this->getRandomBytes(24)), '+/', '-_'), '='),
         );
+
+         //shiv
+	$level=1;
+
+
+//	$this->db->select('MAX(id) as max_id');
+//	$this->db->from('users');
+//      $maxid=$this->db->get()->result_array();
+//	$data['manager']=var_dump($this->input->post("manager")); 
+	foreach($this->input->post("managerS") as $managers){
+//$this->db->select("max(`id`)");
+  //      $this->db->from('users');
+//      $maxuserid=$this->db->get();
+  //	$maxuserid = $managerid + 1;
+$query = $this->db->query('SELECT max(id) as maxid from users');
+$maxuserid=$query->row();
+$newuserid=$maxuserid->maxid + 1;
+	$man=array(
+//	'id'=>3,
+        'employee_id'=>$newuserid,
+	'manager_id'=>$managers,
+        'level_no'=>$level
+	);
+//	while(1){
+ //	echo "<p>shivphp</p>";	
+//	}
+	$this->db->insert('manager_levels',$man);
+	$level = $level + 1;
+	}
+        // shiv
 
         if ($this->input->post('entity') != NULL && $this->input->post('entity') != '') {
             $data['organization'] = $this->input->post('entity');
