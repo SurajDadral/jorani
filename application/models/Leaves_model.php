@@ -468,6 +468,9 @@ class Leaves_model extends CI_Model {
             'status' => $this->input->post('status'),
             'employee' => $employeeId
         );
+  $levelquery=$this->db->query('SELECT max(level_no) as maxlevel from manager_levels where employee_id='.$employeeId);
+         $data["current_level_of_manager"]=$levelquery->row()->maxlevel;
+
         $this->db->insert('leaves', $data);
         $newId = $this->db->insert_id();
 
@@ -1216,11 +1219,12 @@ class Leaves_model extends CI_Model {
     public function getLeavesRequestedToManagerWithHistory($manager, $all = FALSE){
       $this->load->model('delegations_model');
       $manager = intval($manager);
-      $query="SELECT leaves.id as leave_id, users.*, leaves.*, types.name as type_label, status.name as status_name, types.name as type_name, lastchange.date as change_date, requested.date as request_date
+      $query="SELECT leaves.id as leave_id, users.*, leaves.*, types.name as type_label, status.name as status_name, types.name as type_name, lastchange.date as change_date, requested.date as request_date, ml.*
         FROM `leaves`
         inner join status ON leaves.status = status.id
         inner join types ON leaves.type = types.id
         inner join users ON users.id = leaves.employee
+	inner join `manager_levels` ml ON leaves.employee = ml.employee_id
         left outer join (
           SELECT id, MAX(change_date) as date
           FROM leaves_history
@@ -1236,9 +1240,9 @@ class Leaves_model extends CI_Model {
       $ids = $this->delegations_model->listManagersGivingDelegation($manager);
       if (count($ids) > 0) {
         array_push($ids, $manager);
-        $query .= " WHERE users.manager IN (" . implode(",", $ids) . ")";
+        $query .= " WHERE ml.manager_id IN (" . implode(",", $ids) . ")";
       } else {
-        $query .= " WHERE users.manager = $manager";
+        $query .= " WHERE ml.manager_id = $manager";
       }
       if ($all == FALSE) {
         $query .= " AND (leaves.status = " . LMS_REQUESTED .
