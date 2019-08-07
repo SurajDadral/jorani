@@ -468,7 +468,9 @@ class Leaves_model extends CI_Model {
             'status' => $this->input->post('status'),
             'employee' => $employeeId
         );
-  $levelquery=$this->db->query('SELECT max(level_no) as maxlevel from manager_levels where employee_id='.$employeeId);
+
+// store lowest level in leave.current_level_of_manager field
+         $levelquery=$this->db->query('SELECT max(level_no) as maxlevel from manager_levels where employee_id='.$employeeId);
          $data["current_level_of_manager"]=$levelquery->row()->maxlevel;
 
         $this->db->insert('leaves', $data);
@@ -1244,6 +1246,7 @@ class Leaves_model extends CI_Model {
       } else {
         $query .= " WHERE ml.manager_id = $manager";
       }
+	$query .= " AND leaves.current_level_of_manager <= ml.level_no ";
       if ($all == FALSE) {
         $query .= " AND (leaves.status = " . LMS_REQUESTED .
                 " OR leaves.status = " . LMS_CANCELLATION . ")";
@@ -1252,6 +1255,37 @@ class Leaves_model extends CI_Model {
       $this->db->query('SET SQL_BIG_SELECTS=1');
       return $this->db->query($query)->result_array();
     }
+
+/**
+ *This function give top level of manager of an employee
+ it  return id of top level manager
+ */
+	public function getToplevelmanager($id){
+		$employeeid=intval($id);
+		$query=$this->db->query("SELECT manager_id as mi FROM manager_levels where employee_id= $employeeid and level_no=1");
+			return 	$query->result_array();
+
+		}
+/**
+ *This function change level of manager to next upper level when a manager recommend leave to him.
+ */
+	public function changeLevel($id){
+	$currentLevel=$this->db->qurey("select current_level_of_manager as cl from leaves where id=$id ")->row();
+	if(($currentLevel->cl) != 1){
+	    $nextLevel=$currentLevel - 1;
+		$data = array(
+			'current_level_of_manager' => $nextLevel
+			);	
+		$this->db->update('leaves',$data);
+		return $nextLevel;
+	
+	} else {
+		return -1;
+		}
+	}
+
+
+
 
     /**
      * Count leave requests submitted to the connected user (or if delegate of a manager)
