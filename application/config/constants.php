@@ -50,6 +50,8 @@ define('LMS_ACCEPTED', 3);
 define('LMS_REJECTED', 4);
 define('LMS_CANCELLATION', 5);
 define('LMS_CANCELED', 6);
+define('LMS_RECOMMENDED', 7);
+
 
 //Transitions
 define('LMS_PLANNED_REQUESTED', 102);
