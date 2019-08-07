@@ -70,13 +70,19 @@ class Requests extends CI_Controller {
         $this->auth->checkIfOperationIsAllowed('accept_requests');
         $this->load->model('users_model');
         $this->load->model('delegations_model');
+	 $this->load->model('leaves_model');
+
         $leave = $this->leaves_model->getLeaves($id);
         if (empty($leave)) {
             redirect('notfound');
         }
         $employee = $this->users_model->getUsers($leave['employee']);
-        $is_delegate = $this->delegations_model->isDelegateOfManager($this->user_id, $employee['manager']);
-        if (($this->user_id == $employee['manager']) || ($this->is_hr)  || ($is_delegate)) {
+    $is_delegate = $this->delegations_model->isDelegateOfManager($this->user_id, $employee['manager']);
+	//only top manager of employee can accept leave request 
+ 	$topLevelManager=$this->leaves_model->getToplevelmanager($employee['id']);
+     //   $data['data']=$topLevelManager[0]['mi'];
+       //   $this->load->view('test',$data);
+        if (($this->user_id ==$topLevelManager[0]['mi']) || ($this->is_hr)  || ($is_delegate)) {
             $this->leaves_model->switchStatus($id, LMS_ACCEPTED);
             $this->sendMail($id, LMS_REQUESTED_ACCEPTED);
             $this->session->set_flashdata('msg', lang('requests_accept_flash_msg_success'));
@@ -91,7 +97,41 @@ class Requests extends CI_Controller {
             redirect('leaves');
         }
     }
+//shiv
+public function recommend($id){
+         $this->auth->checkIfOperationIsAllowed('accept_requests');
+        $this->load->model('users_model');
+        $this->load->model('delegations_model');
+	 $this->load->model('leaves_model');
 
+        $leave = $this->leaves_model->getLeaves($id);
+        if (empty($leave)) {
+            redirect('notfound');
+        }
+        $employee = $this->users_model->getUsers($leave['employee']);
+    $is_delegate = $this->delegations_model->isDelegateOfManager($this->user_id, $employee['manager']);
+	//only top manager of employee can accept leave request 
+ 	$topLevelManager=$this->leaves_model->getToplevelmanager($employee['id']);
+     //   $data['data']=$topLevelManager[0]['mi'];
+       //   $this->load->view('test',$data);
+        if (($this->user_id ==$topLevelManager[0]['mi']) || ($this->is_hr)  || ($is_delegate)) {
+         $nextlevel= $this->leaves_model->changeLevel($id); 
+	  //  $this->leaves_model->switchStatus($id, LMS_ACCEPTED);
+       //     $this->sendMail($id, LMS_REQUESTED_ACCEPTED);
+            $this->session->set_flashdata('msg', lang('requests_accept_flash_msg_success'));
+            if (isset($_GET['source'])) {
+                redirect($_GET['source']);
+            } else {
+                redirect('requests');
+            }
+        } else {
+            log_message('error', 'User #' . $this->user_id . ' illegally tried to accept leave #' . $id);
+            $this->session->set_flashdata('msg', lang('requests_accept_flash_msg_error'));
+            redirect('leaves');
+        }
+
+}
+//shiv
     /**
      * Reject a leave request
      * @param int $id leave request identifier
