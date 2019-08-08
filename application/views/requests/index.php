@@ -39,6 +39,9 @@ if ($showAll == FALSE) {
     <span class="label label-important" style="background-color: #ff0000;"><input type="checkbox" <?php echo $checked;?> id="chkRejected" class="filterStatus" <?php echo $disable;?>> &nbsp;<?php echo lang('Rejected');?></span> &nbsp;
     <span class="label label-important" style="background-color: #ff0000;"><input type="checkbox" checked id="chkCancellation" class="filterStatus"> &nbsp;<?php echo lang('Cancellation');?></span> &nbsp;
     <span class="label label-important" style="background-color: #ff0000;"><input type="checkbox" <?php echo $checked;?> id="chkCanceled" class="filterStatus" <?php echo $disable;?>> &nbsp;<?php echo lang('Canceled');?></span>
+		&nbsp;
+		<span class="label label-info"><input type="checkbox"  <?php echo $checked;?>   id="chkRecommended" class="filterStatus" <?php echo $disable;?>> &nbsp;<?php echo lang('Recommended');?></span>
+
     </div>
 </div>
 
@@ -95,10 +98,24 @@ if ($showAll == FALSE) {
               &nbsp;
               <a href="#" class="lnkCancellationReject" data-id="<?php echo $request['leave_id']; ?>" title="<?php echo lang('requests_index_thead_tip_reject');?>"><i class="mdi mdi-close nolink"></i></a>
               <?php } else { ?>
+<!--shiv-->
+		<?php if($request['current_level_of_manager']==1 && $request['current_level_of_manager'] == $request['level_no']){ ?>
+
               <a href="#" class="lnkAccept" data-id="<?php echo $request['leave_id']; ?>" title="<?php echo lang('requests_index_thead_tip_accept');?>"><i class="mdi mdi-check nolink"></i></a>
               &nbsp;
-              <a href="#" class="lnkReject" data-id="<?php echo $request['leave_id']; ?>" title="<?php echo lang('requests_index_thead_tip_reject');?>"><i class="mdi mdi-close nolink"></i></a>
+		<?php }else{ ?>
+		<?php if($request['current_level_of_manager'] == $request['level_no']){ ?>
+
+             <a	href="#" class="lnkRecommend " data-id="<?php echo $request['leave_id']; ?>" title="<?php echo "Recommend";?>"><i class="mdi mdi-arrow-left-thick nolink"></i></a>
+	
+		<?php }}?>
+
+<!--shiv-->
+  		<a href="#" class="lnkReject" data-id="<?php echo $request['leave_id']; ?>" title="<?php echo lang('requests_index_thead_tip_reject');?>"><i class="mdi mdi-close nolink"></i></a>
+
               <?php } ?>
+
+<!--SHIV-->
               <?php if ($this->config->item('enable_history') === TRUE) { ?>
               &nbsp;
               <a href="<?php echo base_url();?>leaves/leaves/<?php echo $request['leave_id']; ?>" title="<?php echo lang('requests_index_thead_tip_view');?>"><i class="mdi mdi-eye nolink"></i></a>
@@ -117,6 +134,8 @@ if ($showAll == FALSE) {
             case 1: echo "<td><span class='label'>" . lang($request['status_name']) . "</span></td>"; break;
             case 2: echo "<td><span class='label label-warning'>" . lang($request['status_name']) . "</span></td>"; break;
             case 3: echo "<td><span class='label label-success'>" . lang($request['status_name']) . "</span></td>"; break;
+	    case 7: echo "<td><span class='label label-info'>" . lang($request['status_name']) . "</span></td>"; break;
+
             default: echo "<td><span class='label label-important' style='background-color: #ff0000;'>" . lang($request['status_name']) . "</span></td>"; break;
         }?>
         <?php
@@ -208,6 +227,8 @@ function filterStatusColumn() {
     if ($('#chkRejected').prop('checked')) filter += "<?php echo lang('Rejected');?>|";
     if ($('#chkCancellation').prop('checked')) filter += "<?php echo lang('Cancellation');?>|";
     if ($('#chkCanceled').prop('checked')) filter += "<?php echo lang('Canceled');?>|";
+    if ($('#chkRecommended').prop('checked')) filter += "<?php echo lang('Recommended');?>|";
+
     filter = filter.slice(0,-1) + ")$";
     if (filter.indexOf('(') == -1) filter = 'nothing is selected';
     leaveTable.columns( 6 ).search( filter, true, false ).draw();
@@ -251,6 +272,16 @@ $(document).ready(function() {
             window.location.href = "<?php echo base_url();?>requests/accept/" + $(this).data("id");
         }
      });
+//shiv
+ $('#leaves').on('click', '.lnkRecommend', function (event) {
+        event.preventDefault();
+        if (!clicked) {
+            clicked = true;
+            window.location.href = "<?php echo base_url();?>requests/recommend/" + $(this).data("id");
+        }
+     });
+
+//shiv
      $("#leaves").on('click', '.lnkReject', function (event) {
         event.preventDefault();
         if (!clicked) {
@@ -359,6 +390,8 @@ $(document).ready(function() {
                 case '4': $("#chkRejected").prop("checked", true); break;
                 case '5': $("#chkCancellation").prop("checked", true); break;
                 case '6': $("#chkCanceled").prop("checked", true); break;
+		case '7': $("#chkRecommended").prop("checked", true); break;
+
             }
         });
         //$("#cboLeaveType option[value='" + getURLParameter('type') + "']").prop("selected", true);
@@ -414,7 +447,9 @@ $(document).ready(function() {
                 case '4': $("#chkRejected").prop("checked", true); break;
                 case '5': $("#chkCancellation").prop("checked", true); break;
                 case '6': $("#chkCanceled").prop("checked", true); break;
-            }
+                case '7': $("#chkRecommended").prop("checked", true); break;
+
+		}
         });
         //$("#cboLeaveType option[value='" + getURLParameter('type') + "']").prop("selected", true);
         filterStatusColumn();
