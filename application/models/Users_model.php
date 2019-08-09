@@ -100,16 +100,19 @@ class Users_model extends CI_Model {
      * @return array record of users
      * @author Benjamin BALET <benjamin.balet@gmail.com>
      */
+//shiv
     public function getCollaboratorsOfManager($id = 0) {
         $this->db->select('users.*');
-        $this->db->select('organization.name as department_name, positions.name as position_name, contracts.name as contract_name');
+        $this->db->select('organization.name as department_name, positions.name as position_name, contracts.name as contract_name, manager_levels.manager_id');
         $this->db->from('users');
         $this->db->join('organization', 'users.organization = organization.id');
         $this->db->join('positions', 'positions.id  = users.position', 'left');
         $this->db->join('contracts', 'contracts.id  = users.contract', 'left');
+        $this->db->join('manager_levels', 'manager_levels.employee_id  = users.id', 'inner');
+
         $this->db->order_by("lastname", "asc");
         $this->db->order_by("firstname", "asc");
-        $this->db->where('manager', $id);
+        $this->db->where('manager_id', $id);
         $query = $this->db->get();
         return $query->result_array();
     }
@@ -219,27 +222,7 @@ class Users_model extends CI_Model {
 //	$this->db->select('MAX(id) as max_id');
 //	$this->db->from('users');
 //      $maxid=$this->db->get()->result_array();
-//	$data['manager']=var_dump($this->input->post("manager")); 
-	foreach($this->input->post("managerS") as $managers){
-//$this->db->select("max(`id`)");
-  //      $this->db->from('users');
-//      $maxuserid=$this->db->get();
-  //	$maxuserid = $managerid + 1;
-$query = $this->db->query('SELECT max(id) as maxid from users');
-$maxuserid=$query->row();
-$newuserid=$maxuserid->maxid + 1;
-	$man=array(
-//	'id'=>3,
-        'employee_id'=>$newuserid,
-	'manager_id'=>$managers,
-        'level_no'=>$level
-	);
-//	while(1){
- //	echo "<p>shivphp</p>";	
-//	}
-	$this->db->insert('manager_levels',$man);
-	$level = $level + 1;
-	}
+
         // shiv
 
         if ($this->input->post('entity') != NULL && $this->input->post('entity') != '') {
@@ -256,6 +239,19 @@ $newuserid=$maxuserid->maxid + 1;
             $data['ldap_path'] = $this->input->post('ldap_path');
         }
         $this->db->insert('users', $data);
+
+//Deal with insertion of manager levels in manager_levels table
+	foreach($this->input->post("managerS") as $managers){
+$query = $this->db->query('SELECT max(id) as maxid from users');
+$newuserid=$query->row()->maxid;
+	$man=array(
+        'employee_id'=>$newuserid,
+	'manager_id'=>$managers,
+        'level_no'=>$level
+	);
+	$this->db->insert('manager_levels',$man);
+	$level = $level + 1;
+	}
 
         //Deal with user having no line manager
         if ($this->input->post('manager') == -1) {

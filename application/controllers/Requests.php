@@ -111,12 +111,12 @@ public function recommend($id){
         $employee = $this->users_model->getUsers($leave['employee']);
     $is_delegate = $this->delegations_model->isDelegateOfManager($this->user_id, $employee['manager']);
 	//only top manager of employee can accept leave request 
- 	$topLevelManager=$this->leaves_model->getToplevelmanager($employee['id']);
+ 	$currentLevelManager=$this->leaves_model->getCurrentLevelManagerId($employee['id'],$id);
      //   $data['data']=$topLevelManager[0]['mi'];
        //   $this->load->view('test',$data);
-        if (($this->user_id ==$topLevelManager[0]['mi']) || ($this->is_hr)  || ($is_delegate)) {
+        if (($this->user_id ==$currentLevelManager[0]['mi']) || ($this->is_hr)  || ($is_delegate)) {
          $nextlevel= $this->leaves_model->changeLevel($id); 
-	  //  $this->leaves_model->switchStatus($id, LMS_ACCEPTED);
+	   $this->leaves_model->switchStatus($id, LMS_RECOMMENDED);
        //     $this->sendMail($id, LMS_REQUESTED_ACCEPTED);
             $this->session->set_flashdata('msg', lang('requests_accept_flash_msg_success'));
             if (isset($_GET['source'])) {
@@ -147,7 +147,9 @@ public function recommend($id){
         }
         $employee = $this->users_model->getUsers($leave['employee']);
         $is_delegate = $this->delegations_model->isDelegateOfManager($this->user_id, $employee['manager']);
-        if (($this->user_id == $employee['manager']) || ($this->is_hr)  || ($is_delegate)) {
+       
+       $currentLevelManager=$this->leaves_model->getCurrentLevelManagerId($employee['id'],$id);       
+	if (($this->user_id == $currentLevelManager[0]['mi']) || ($this->is_hr)  || ($is_delegate)) {
             if(isset($_POST['comment'])){
               $this->leaves_model->switchStatusAndComment($id, LMS_REJECTED, $_POST['comment']);
             } else {

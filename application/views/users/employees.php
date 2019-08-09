@@ -21,7 +21,8 @@
         </tr>
     </thead>
     <tbody>
-<?php foreach ($employees as $employee): ?>
+<!--
+ <?php foreach ($employees as $employee): ?> 
     <tr>
         <td><?php echo $employee['id'] ?></td>
         <td><?php echo $employee['firstname'] ?></td>
@@ -29,6 +30,7 @@
         <td><?php echo $employee['email'] ?></td>
     </tr>
 <?php endforeach ?>
+-->
     </tbody>
 </table>
     </div>
@@ -43,7 +45,7 @@
 $(document).ready(function() {
     //Transform the HTML table in a fancy datatable
     $('#employees').dataTable({
-        select: 'single',
+//        select: 'single',
         pageLength: 5,
         language: {
             decimal:            "<?php echo lang('datatable_sInfoThousands');?>",
@@ -69,6 +71,13 @@ $(document).ready(function() {
             }
         }
     });
+
+  var data=  $('#employees').DataTable().rows().data();
+$.each(data, function( index, value ) {
+	  alert(  value[2] );
+});
+
+alert(data);
     //Hide pagination select box in order to save space
     $('.dataTables_length').css("display", "none");
 });
