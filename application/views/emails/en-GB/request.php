@@ -43,10 +43,15 @@
             <tr>
               <td>Last Comment &nbsp;</td><td>{Comments}</td>
             </tr>
-            <tr>
+	    <tr>
+                <?php if($LeaveAtLevel == 1) { //here 1 shows top level manager?> 
                 <td><a href="{BaseUrl}requests/accept/{LeaveId}">Accept</a> &nbsp;</td>
-                <td><a href="{BaseUrl}requests?rejected={LeaveId}">Reject</a></td>
-            </tr>
+		<?php }else{ ?>
+                <td><a href="{BaseUrl}requests/recommend/{LeaveId}">Recommend</a> &nbsp;</td>
+                <?php } ?>
+		<td><a href="{BaseUrl}requests?rejected={LeaveId}">Reject</a></td>
+                 
+	    </tr>
         </table>
         <br />
         You can check the <a href="{BaseUrl}hr/counters/collaborators/{UserId}">leave balance</a> before validating the leave request.
