@@ -179,13 +179,25 @@ class Users_model extends CI_Model {
         $this->entitleddays_model->deleteEntitledDaysCascadeUser($id);
         $this->leaves_model->deleteLeavesCascadeUser($id);
         $this->overtime_model->deleteExtrasCascadeUser($id);
-        //Cascade delete line manager role
-        $data = array(
-            'manager' => NULL
-        );
-        $this->db->where('manager', $id);
-        $this->db->update('users', $data);
-    }
+	 //Cascade delete line manager role
+	//added by Shiv Charan
+	
+	$query=$this->db->query("SELECT COUNT(*) as  count FROM manager_levels where manager_id=$id");
+
+	$countSubordinate=$query->row()->count;
+	for($counter=1;$counter<=$countSubordinate;$counter++){
+		$query=$this->db->query("SELECT * FROM manager_levels WHERE manager_id=$id LIMIT 1"); //get employee id and level_no for reference to update manager level records
+	
+		$Temp=$query->row_array();
+		$this->db->query("DELETE FROM manager_levels WHERE manager_id=$id LIMIT 1"); //delete manager level ( having manager id $id ) record from each subordinate
+		$query=$this->db->query("SELECT COUNT(*) as  count FROM manager_levels where employee_id=".$Temp['employee_id']." AND level_no >".$Temp['level_no']);
+		$noOfLeveltoUpdate=$query->row()->count;
+		for($x=0;$x < $noOfLeveltoUpdate;$x++){
+			$query="UPDATE manager_levels SET level_no=".($Temp['level_no']+ $x) ." WHERE employee_id=".$Temp['employee_id']." AND level_no=".($Temp['level_no'] + $x +1); //change level number of other managers
+			$this->db->query($query);
+		}
+	}
+ }
 
     /**
      * Insert a new user into the database. Inserted data are coming from an HTML form
