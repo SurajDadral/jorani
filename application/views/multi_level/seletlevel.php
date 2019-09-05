@@ -382,10 +382,7 @@ var eTable;
 	 eTable.column(1).nodes().each( function (cell, i) {
             cell.innerHTML = i+1;
         } );
-var col=oTable.column(1).data();
-        console.log(col);
-
-    } );
+    });
 //added by Shiv charan
     /* This function deal with removing record of employee from oTable (having id collaborators)
 	    * that are already added in eTable (having id employee and show level of managers)
@@ -396,8 +393,6 @@ var col=oTable.column(1).data();
 
 	    var oTableRow=oTable.row(j);
 
-	console.log(oTableRow.data()['id']);
-	console.log(eTable.rows().data().length);
 	for(var i=0;i< eTable.rows().data().length;i++){
 		if(eTable.row(i).data()['id'] == oTableRow.data()['id']){
 		console.log(oTableRow.data()['id']);
