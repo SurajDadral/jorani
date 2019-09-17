@@ -42,6 +42,10 @@ echo "CREATE DATABASE IF NOT EXISTS jorani;CREATE USER 'jorani'@'localhost' IDEN
 echo "Database created"
 echo "ALTER USER 'jorani'@'localhost' IDENTIFIED WITH mysql_native_password BY 'jorani';" | mysql -u root
 
+echo "Lets host jorani in /var/www/ directory"
+mkdir -p /var/www
+cp -rf /opt/app/* /var/www/
+
 echo "Lets start nginx"
 # Start nginx.
 /usr/sbin/nginx -c /opt/app/.sandstorm/service-config/nginx.conf -g "daemon off;"
