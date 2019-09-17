@@ -12,8 +12,8 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
-CREATE DATABASE IF NOT EXISTS joranigit CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE joranigit;
+CREATE DATABASE IF NOT EXISTS jorani CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE jorani;
 
 --
 -- Functions

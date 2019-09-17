@@ -75,9 +75,9 @@ $query_builder = TRUE;
 
 $db['default'] = array(
 	'dsn'	=> 'mysql:host=localhost;dbname=jorani',
-	'hostname' => '',
-	'username' => 'root',
-	'password' => '',
+	'hostname' => 'localhost',
+	'username' => 'jorani',
+	'password' => 'jorani',
 	'database' => 'jorani',
 	'dbdriver' => 'pdo',
 	'dbprefix' => '',
