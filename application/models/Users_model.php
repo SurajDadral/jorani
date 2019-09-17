@@ -8,7 +8,9 @@
  */
 
 if (!defined('BASEPATH')) { exit('No direct script access allowed'); }
-
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 /**
  * This model contains the business logic and manages the persistence of users (employees)
  * It is also used by the session controller for the authentication.
@@ -36,6 +38,22 @@ class Users_model extends CI_Model {
         }
         $query = $this->db->get_where('users', array('users.id' => $id));
         return $query->row_array();
+    }
+    /**shiv
+     *Get manager of employee with their level
+     * @param int $id id of employee
+     * return array of manager id with their level
+     */
+    public function getManagers($id){
+	    $this->db->select('manager_levels.manager_id');
+            $this->db->order_by("level_no", "asc");
+	    $this->db->where('employee_id',$id);
+	    $query=$this->db->get('manager_levels');
+	   
+	    $emid=intval($id);
+	  //  $query=$this->db->query("SELECT manager_id FROM `manager_levels` WHERE employee_id=$emid ORDER by level_no ASC");
+	    return $query->result_array();
+	       
     }
 
     /**
@@ -98,16 +116,19 @@ class Users_model extends CI_Model {
      * @return array record of users
      * @author Benjamin BALET <benjamin.balet@gmail.com>
      */
+//shiv
     public function getCollaboratorsOfManager($id = 0) {
         $this->db->select('users.*');
-        $this->db->select('organization.name as department_name, positions.name as position_name, contracts.name as contract_name');
+        $this->db->select('organization.name as department_name, positions.name as position_name, contracts.name as contract_name, manager_levels.manager_id');
         $this->db->from('users');
         $this->db->join('organization', 'users.organization = organization.id');
         $this->db->join('positions', 'positions.id  = users.position', 'left');
         $this->db->join('contracts', 'contracts.id  = users.contract', 'left');
+        $this->db->join('manager_levels', 'manager_levels.employee_id  = users.id', 'inner');
+
         $this->db->order_by("lastname", "asc");
         $this->db->order_by("firstname", "asc");
-        $this->db->where('manager', $id);
+        $this->db->where('manager_id', $id);
         $query = $this->db->get();
         return $query->result_array();
     }
@@ -158,13 +179,25 @@ class Users_model extends CI_Model {
         $this->entitleddays_model->deleteEntitledDaysCascadeUser($id);
         $this->leaves_model->deleteLeavesCascadeUser($id);
         $this->overtime_model->deleteExtrasCascadeUser($id);
-        //Cascade delete line manager role
-        $data = array(
-            'manager' => NULL
-        );
-        $this->db->where('manager', $id);
-        $this->db->update('users', $data);
-    }
+	 //Cascade delete line manager role
+	//added by Shiv Charan
+	
+	$query=$this->db->query("SELECT COUNT(*) as  count FROM manager_levels where manager_id=$id");
+
+	$countSubordinate=$query->row()->count;
+	for($counter=1;$counter<=$countSubordinate;$counter++){
+		$query=$this->db->query("SELECT * FROM manager_levels WHERE manager_id=$id LIMIT 1"); //get employee id and level_no for reference to update manager level records
+	
+		$Temp=$query->row_array();
+		$this->db->query("DELETE FROM manager_levels WHERE manager_id=$id LIMIT 1"); //delete manager level ( having manager id $id ) record from each subordinate
+		$query=$this->db->query("SELECT COUNT(*) as  count FROM manager_levels where employee_id=".$Temp['employee_id']." AND level_no >".$Temp['level_no']);
+		$noOfLeveltoUpdate=$query->row()->count;
+		for($x=0;$x < $noOfLeveltoUpdate;$x++){
+			$query="UPDATE manager_levels SET level_no=".($Temp['level_no']+ $x) ." WHERE employee_id=".$Temp['employee_id']." AND level_no=".($Temp['level_no'] + $x +1); //change level number of other managers
+			$this->db->query($query);
+		}
+	}
+ }
 
     /**
      * Insert a new user into the database. Inserted data are coming from an HTML form
@@ -202,13 +235,22 @@ class Users_model extends CI_Model {
             'email' => $this->input->post('email'),
             'password' => $hash,
             'role' => $role,
-            'manager' => $this->input->post('manager'),
+        //    'manager' => $this->input->post('manager'),
             'contract' => $this->input->post('contract'),
             'identifier' => $this->input->post('identifier'),
             'language' => $this->input->post('language'),
             'timezone' => $this->input->post('timezone'),
             'random_hash' => rtrim(strtr(base64_encode($this->getRandomBytes(24)), '+/', '-_'), '='),
         );
+
+         //shiv
+
+
+//	$this->db->select('MAX(id) as max_id');
+//	$this->db->from('users');
+//      $maxid=$this->db->get()->result_array();
+
+        // shiv
 
         if ($this->input->post('entity') != NULL && $this->input->post('entity') != '') {
             $data['organization'] = $this->input->post('entity');
@@ -224,16 +266,33 @@ class Users_model extends CI_Model {
             $data['ldap_path'] = $this->input->post('ldap_path');
         }
         $this->db->insert('users', $data);
+	 $newuserid = $this->db->insert_id();
+
+	//Deal with insertion of manager levels in manager_levels table
+	 $level=1;
+	foreach($this->input->post("managerS") as $managers){
+		if($managers == -1){
+			$managers = $newuserid; //Deal with user having no line manager
+		}	
+	$man=array(
+        'employee_id'=>$newuserid,
+	'manager_id'=>$managers,
+        'level_no'=>$level
+	);
+	$this->db->insert('manager_levels',$man);
+	$level = $level + 1;
+	}
 
         //Deal with user having no line manager
-        if ($this->input->post('manager') == -1) {
+   /*     if ($this->input->post('manager') == -1) {
             $id = $this->db->insert_id();
             $data = array(
                 'manager' => $id
             );
             $this->db->where('id', $id);
             $this->db->update('users', $data);
-        }
+	}
+    */
         return $password;
     }
 
@@ -339,20 +398,20 @@ class Users_model extends CI_Model {
             $role = $role | $role_bit;
         }
 
-        //Deal with user having no line manager
+/*        //Deal with user having no line manager
         if ($this->input->post('manager') == -1) {
             $manager = $this->input->post('id');
         } else {
             $manager = $this->input->post('manager');
         }
-
+ */
         $data = array(
             'firstname' => $this->input->post('firstname'),
             'lastname' => $this->input->post('lastname'),
             'login' => $this->input->post('login'),
             'email' => $this->input->post('email'),
             'role' => $role,
-            'manager' => $manager,
+          //  'manager' => $manager,
             'contract' => $this->input->post('contract'),
             'identifier' => $this->input->post('identifier'),
             'language' => $this->input->post('language'),
@@ -369,6 +428,25 @@ class Users_model extends CI_Model {
         }
         if ($this->config->item('ldap_basedn_db') !== FALSE) {
             $data['ldap_path'] = $this->input->post('ldap_path');
+        }
+	//shiv
+	//delete previous level of manager of employee
+	$employeeId=$this->input->post('id');
+	$query="DELETE FROM `manager_levels` where employee_id=$employeeId";
+	$this->db->query($query);
+	//add updated levels
+	$level=1;
+	foreach($this->input->post("managerS") as $managers){
+		if($managers == -1){
+			$managers = $employeeId; //Deal with user having no line manager
+		}
+        $man=array(
+        'employee_id'=>$employeeId,
+        'manager_id'=>$managers,
+        'level_no'=>$level
+        );
+        $this->db->insert('manager_levels',$man);
+        $level = $level + 1;
         }
 
         $this->db->where('id', $this->input->post('id'));

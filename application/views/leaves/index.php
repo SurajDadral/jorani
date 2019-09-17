@@ -32,6 +32,10 @@
     <span class="label label-important" style="background-color: #ff0000;"><input type="checkbox" checked id="chkRejected" class="filterStatus"> &nbsp;<?php echo lang('Rejected');?></span> &nbsp;
     <span class="label label-important" style="background-color: #ff0000;"><input type="checkbox" checked id="chkCancellation" class="filterStatus"> &nbsp;<?php echo lang('Cancellation');?></span> &nbsp;
     <span class="label label-important" style="background-color: #ff0000;"><input type="checkbox" checked id="chkCanceled" class="filterStatus"> &nbsp;<?php echo lang('Canceled');?></span>
+               &nbsp;
+               <span class="label label-info"><input type="checkbox"  checked   id="chkRecommended" class="filterStatus"> &nbsp;<?php echo lang('Recommended');?></span>
+
+                      
     </div>
 </div>
 
@@ -113,7 +117,8 @@
                 }
                 //Reminder rules
                 if (($leave['status'] == LMS_REQUESTED) ||
-                        ($leave['status'] == LMS_CANCELLATION)) {
+			($leave['status'] == LMS_CANCELLATION) || (
+				$leave['status'] == LMS_RECOMMENDED)) {
                     $showReminder = TRUE;
                 }
                 //Direct cancelation by the employee
@@ -148,8 +153,8 @@
                 <?php } ?>
             </div>
         </td>
-        <td data-order="<?php echo $tmpStartDate; ?>"><?php echo $startdate . ' (' . lang($leave['startdatetype']). ')'; ?></td>
-        <td data-order="<?php echo $tmpEndDate; ?>"><?php echo $enddate . ' (' . lang($leave['enddatetype']) . ')'; ?></td>
+        <td data-order="<?php echo $tmpStartDate; ?>"><?php echo $startdate . ' (' . $leave['startdatetype']. ')'; ?></td>
+        <td data-order="<?php echo $tmpEndDate; ?>"><?php echo $enddate . ' (' . $leave['enddatetype'] . ')'; ?></td>
         <td><?php echo $leave['cause']; ?></td>
         <td><?php echo $leave['duration']; ?></td>
         <td><?php echo $leave['type_name']; ?></td>
@@ -158,7 +163,10 @@
             case 1: echo "<td><span class='label'>" . lang($leave['status_name']) . "</span></td>"; break;
             case 2: echo "<td><span class='label label-warning'>" . lang($leave['status_name']) . "</span></td>"; break;
             case 3: echo "<td><span class='label label-success'>" . lang($leave['status_name']) . "</span></td>"; break;
-            default: echo "<td><span class='label label-important' style='background-color: #ff0000;'>" . lang($leave['status_name']) . "</span></td>"; break;
+            case 7: echo "<td><span class='label label-info'>" . lang($leave['status_name']) . "</span></td>"; break;
+
+
+	    default: echo "<td><span class='label label-important' style='background-color: #ff0000;'>" . lang($leave['status_name']) . "</span></td>"; break;
         }?>
         <?php
         if ($this->config->item('enable_history') == TRUE){
@@ -254,6 +262,7 @@ function filterStatusColumn() {
     if ($('#chkRejected').prop('checked')) filter += "<?php echo lang('Rejected');?>|";
     if ($('#chkCancellation').prop('checked')) filter += "<?php echo lang('Cancellation');?>|";
     if ($('#chkCanceled').prop('checked')) filter += "<?php echo lang('Canceled');?>|";
+    if ($('#chkRecommended').prop('checked')) filter += "<?php echo lang('Recommended');?>|";  
     filter = filter.slice(0,-1) + ")$";
     if (filter.indexOf('(') == -1) filter = 'nothing is selected';
     leaveTable.columns( 6 ).search( filter, true, false ).draw();

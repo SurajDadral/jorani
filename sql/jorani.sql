@@ -12,8 +12,8 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
-CREATE DATABASE IF NOT EXISTS jorani CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE jorani;
+CREATE DATABASE IF NOT EXISTS joranigit CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE joranigit;
 
 --
 -- Functions
@@ -409,6 +409,19 @@ CREATE TABLE IF NOT EXISTS `users` (
 --
 INSERT INTO `users` (`id`, `firstname`, `lastname`, `login`, `email`, `password`, `role`, `manager`, `country`, `organization`, `contract`, `position`, `datehired`, `identifier`, `language`) VALUES
 (1, 'Benjamin', 'BALET', 'bbalet', 'benjamin.balet@gmail.com', '$2a$08$LeUbaGFqJjLSAN7to9URsuHB41zcmsMBgBhpZuFp2y2OTxtVcMQ.C', 8, 1, NULL, 0, 1, 1, '2013-10-28', 'PNC0025', 'en');
+
+--
+-- Table structure for table `manager_levels`
+--
+
+CREATE TABLE IF NOT EXISTS `manager_levels` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'unique identifier for manager level table',
+  `employee_id` int(11) NOT NULL COMMENT 'id of employee ',
+  `manager_id` int(11) NOT NULL COMMENT 'id of manager',
+  `level_no` int(11) NOT NULL COMMENT 'level number of manager',
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='this table provide level of manager for leave approval';
+
 
 --
 -- Structure of table `delegations`

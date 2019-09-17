@@ -418,7 +418,7 @@ class Leaves extends CI_Controller {
         $data = getUserContext($this);
         $leave = $this->leaves_model->getLeaves($id);
         switch($leave['status']) {
-            case LMS_REQUESTED: //Requested
+            case LMS_REQUESTED || LMS_RECOMMENDED: //Requested OR RECOMMENDED
                 $this->sendMailOnLeaveRequestCreation($id, TRUE);
                 break;
             case LMS_CANCELLATION: //Cancellation
@@ -446,8 +446,14 @@ class Leaves extends CI_Controller {
         //We load everything from DB as the LR can be edited from HR/Employees
         $leave = $this->leaves_model->getLeaves($id);
         $user = $this->users_model->getUsers($leave['employee']);
-        $manager = $this->users_model->getUsers($user['manager']);
-        if (empty($manager['email'])) {
+       // $manager = $this->users_model->getUsers($user['manager']);
+//shiv
+//	$managersid=$this->users_model->getmanager($leave['employee']);
+         $currentLevelManagerId=$this->leaves_model->getCurrentLevelManagerId($leave['employee'],$id);
+	$manager = $this->users_model->getUsers($currentLevelManagerId);//shiv
+
+
+	if (empty($manager['email'])) {
             $this->session->set_flashdata('msg', lang('leaves_create_flash_msg_error'));
         } else {
             //Send an e-mail to the manager
@@ -489,7 +495,10 @@ class Leaves extends CI_Controller {
         //We load everything from DB as the LR can be edited from HR/Employees
         $leave = $this->leaves_model->getLeaves($id);
         $user = $this->users_model->getUsers($leave['employee']);
-        $manager = $this->users_model->getUsers($user['manager']);
+//shiv 
+//	$managersid=$this->user_model->getmanager($leave['employee']);
+	//get record of manager having bottom most level
+//	$manager = $this->users_model->getUsers(end($managersid['manager_id']));
         if (empty($manager['email'])) {
             //TODO: create specific error message when the employee has no manager
             $this->session->set_flashdata('msg', lang('leaves_cancel_flash_msg_error'));
@@ -598,7 +607,8 @@ class Leaves extends CI_Controller {
             'Balance' => $this->leaves_model->getLeavesTypeBalanceForEmployee($leave['employee'] , $leave['type_name'], $leave['startdate']),
             'Reason' => $leave['cause'],
             'BaseUrl' => $this->config->base_url(),
-            'LeaveId' => $leave['id'],
+	    'LeaveId' => $leave['id'],
+	    'LeaveAtLevel'=>$leave['current_level_of_manager'],//edited by shiv
             'UserId' => $this->user_id,
             'Comments' => $comment
         );

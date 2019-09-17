@@ -65,8 +65,9 @@ if (isset($_GET['source'])) {
         </div>
     </div>
     <div class="span8">
-        <input type="hidden" name="manager" id="manager" value="<?php echo $users_item['manager']; ?>" />
-        <div class="control-group">
+<!--        <input type="hidden" name="manager" id="manager" value="<?php echo $users_item['manager']; ?>" />
+--> 
+   <div class="control-group">
             <label class="control-label" for="txtManager"><?php echo lang('users_edit_field_manager');?>
                 <a style="color:black;" href="#" data-toggle="tooltip" title="<?php echo lang('users_edit_field_manager_description');?>">
                     <i class="mdi mdi-information"></i>
@@ -74,8 +75,20 @@ if (isset($_GET['source'])) {
             </label>
             <div class="controls">
                 <div class="input-append">
-                    <input type="text" id="txtManager" name="txtManager" value="<?php echo $manager_label; ?>" required readonly/>
-                    <a id="cmdSelfManager" class="btn btn-primary"><?php echo lang('users_edit_button_self');?></a>
+<!--                    <input type="text" id="txtManager" name="txtManager" value="<?php echo $manager_label; ?>" required readonly/>
+ -->
+ <select name="managerS[]"  size="1" multiple="multiple"  id="managerS" value="<?php echo $managers['managersId']; ?>" required readonly>
+<?php foreach ($managers as $manager): ?>
+<option value=<?php echo $manager['manager_id'];?> selected="true" disabled="disabled" readonly> <?php 
+if($users_item['id'] == $manager['manager_id']){
+	echo lang('users_create_field_manager_alt');
+}else{
+	echo $manager['name'];
+}?>
+</option>
+<?php endforeach ?>
+	 </select>
+		<a id="cmdSelfManager" class="btn btn-primary"><?php echo lang('users_edit_button_self');?></a>
                     <a id="cmdSelectManager" class="btn btn-primary"><?php echo lang('users_edit_button_select');?></a>
                 </div>
             </div>
@@ -226,7 +239,7 @@ if (isset($_GET['source'])) {
 
 <div class="row-fluid">
     <div class="span12">
-        <button type="submit" class="btn btn-primary"><i class="mdi mdi-check"></i>&nbsp;<?php echo lang('users_edit_button_update');?></button>
+        <button type="submit" id="updateUserBtn" class="btn btn-primary"><i class="mdi mdi-check"></i>&nbsp;<?php echo lang('users_edit_button_update');?></button>
         &nbsp;
         <?php if (isset($_GET['source'])) {?>
             <a href="<?php echo base_url() . $_GET['source']; ?>" class="btn btn-danger"><i class="mdi mdi-close"></i>&nbsp;<?php echo lang('users_edit_button_cancel');?></a>
@@ -247,8 +260,11 @@ if (isset($_GET['source'])) {
         <img src="<?php echo base_url();?>assets/images/loading.gif">
     </div>
     <div class="modal-footer">
-        <a href="#" onclick="select_manager();" class="btn"><?php echo lang('users_edit_popup_manager_button_ok');?></a>
+ <a href="#" onclick="select_manager();" class="btn btn-primary"><?php echo "Submit"/*lang('users_create_popup_manager_button_ok')*/;?></a>
+
+<!--        <a href="#" onclick="select_manager();" class="btn"><?php echo lang('users_edit_popup_manager_button_ok');?></a>
         <a href="#" onclick="$('#frmSelectManager').modal('hide');" class="btn"><?php echo lang('users_edit_popup_manager_button_cancel');?></a>
+-->
     </div>
 </div>
 
@@ -279,6 +295,7 @@ if (isset($_GET['source'])) {
         <a href="#" onclick="$('#frmSelectPosition').modal('hide');" class="btn"><?php echo lang('users_edit_popup_position_button_cancel');?></a>
     </div>
 </div>
+<link rel="stylesheet" href="<?php echo base_url();?>assets/css/multiLevel.css">
 
 <link rel="stylesheet" href="<?php echo base_url();?>assets/bootstrap-datepicker-1.8.0/css/bootstrap-datepicker.min.css">
 <script src="<?php echo base_url();?>assets/bootstrap-datepicker-1.8.0/js/bootstrap-datepicker.min.js"></script>
@@ -290,7 +307,7 @@ if (isset($_GET['source'])) {
 <script type="text/javascript">
 
     //Popup select postion: on click OK, find the user id for the selected line
-    function select_manager() {
+/*    function select_manager() {
         var employees = $('#employees').DataTable();
         if ( employees.rows({ selected: true }).any() ) {
             var manager = employees.rows({selected: true}).data()[0][0];
@@ -298,6 +315,18 @@ if (isset($_GET['source'])) {
             $('#manager').val(manager);
             $('#txtManager').val(text);
         }
+        $("#frmSelectManager").modal('hide');
+    }
+ */
+ function select_manager() {
+        var employees = $('#employees').DataTable();
+	var manager=new Array();
+	var val =employees.rows().data().toArray();
+        $('#managerS').find('option').remove();
+	$.each(val,function(index,val){
+	$('#managerS').append($('<option>',{value:val['id'],selected:"selected",disabled:"disabled",text:val['firstname']}));
+ 	manager.push( val['id']);
+	});
         $("#frmSelectManager").modal('hide');
     }
 
@@ -321,6 +350,10 @@ if (isset($_GET['source'])) {
         }
         $("#frmSelectPosition").modal('hide');
     }
+
+    $("#updateUserBtn").click(function(){
+	    $("#managerS option").attr('disabled', false);
+	});
 
     //Init datepicker for using an alternative field and format
     $(document).ready(function() {
@@ -363,8 +396,10 @@ if (isset($_GET['source'])) {
         });
         //Self manager button
         $("#cmdSelfManager").click(function() {
-            $("#manager").val('-1');
-            $('#txtManager').val('<?php echo lang('users_edit_field_manager_alt');?>');
+	  $('#managerS').find('option').remove();
+        $('#managerS').append($('<option>',{value:'-1',selected:"selected",disabled:"disabled",text:"<?php echo lang('users_create_field_manager_alt');?>"}));  
+		// $("#manager").val('-1');
+           // $('#txtManager').val('<?php echo lang('users_edit_field_manager_alt');?>');
         });
 
         //Init all tooltips

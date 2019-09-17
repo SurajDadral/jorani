@@ -468,6 +468,11 @@ class Leaves_model extends CI_Model {
             'status' => $this->input->post('status'),
             'employee' => $employeeId
         );
+
+// store lowest level in leave.current_level_of_manager field
+         $levelquery=$this->db->query('SELECT max(level_no) as maxlevel from manager_levels where employee_id='.$employeeId);
+         $data["current_level_of_manager"]=$levelquery->row()->maxlevel;
+
         $this->db->insert('leaves', $data);
         $newId = $this->db->insert_id();
 
@@ -1216,11 +1221,12 @@ class Leaves_model extends CI_Model {
     public function getLeavesRequestedToManagerWithHistory($manager, $all = FALSE){
       $this->load->model('delegations_model');
       $manager = intval($manager);
-      $query="SELECT leaves.id as leave_id, users.*, leaves.*, types.name as type_label, status.name as status_name, types.name as type_name, lastchange.date as change_date, requested.date as request_date
+      $query="SELECT leaves.id as leave_id, users.*, leaves.*, types.name as type_label, status.name as status_name, types.name as type_name, lastchange.date as change_date, requested.date as request_date, ml.*
         FROM `leaves`
         inner join status ON leaves.status = status.id
         inner join types ON leaves.type = types.id
         inner join users ON users.id = leaves.employee
+	inner join `manager_levels` ml ON leaves.employee = ml.employee_id
         left outer join (
           SELECT id, MAX(change_date) as date
           FROM leaves_history
@@ -1236,10 +1242,11 @@ class Leaves_model extends CI_Model {
       $ids = $this->delegations_model->listManagersGivingDelegation($manager);
       if (count($ids) > 0) {
         array_push($ids, $manager);
-        $query .= " WHERE users.manager IN (" . implode(",", $ids) . ")";
+        $query .= " WHERE ml.manager_id IN (" . implode(",", $ids) . ")";
       } else {
-        $query .= " WHERE users.manager = $manager";
+        $query .= " WHERE ml.manager_id = $manager";
       }
+	$query .= " AND leaves.current_level_of_manager <= ml.level_no ";
       if ($all == FALSE) {
         $query .= " AND (leaves.status = " . LMS_REQUESTED .
                 " OR leaves.status = " . LMS_CANCELLATION . ")";
@@ -1248,6 +1255,55 @@ class Leaves_model extends CI_Model {
       $this->db->query('SET SQL_BIG_SELECTS=1');
       return $this->db->query($query)->result_array();
     }
+
+/**
+ *This function give top level of manager of an employee
+ it  return id of top level manager
+ */
+	public function getToplevelmanager($id){
+		$employeeid=intval($id);
+		$query=$this->db->query("SELECT manager_id as mi FROM manager_levels where employee_id= $employeeid and level_no=1");
+			return 	$query->result_array();
+
+		}
+/**
+ * This function take give manager id at current level of leave
+ * param employee id ,leave id
+ * return int value of manager_id 
+ */
+	public function getCurrentLevelManagerId($employeeId,$leaveId){
+                $employeeid=intval($employeeId);
+		$leaveAtLevel=$this->db->query('SELECT current_level_of_manager clm FROM leaves where id='.$leaveId)->row()->clm;
+                $query=$this->db->query("SELECT manager_id as mi FROM manager_levels where employee_id= $employeeid and level_no=$leaveAtLevel");
+                        return  $query->row()->mi;
+
+                }
+
+
+
+
+
+/**
+ *This function change level of manager to next upper level when a manager recommend leave to him.
+ */
+	public function changeLevel($id){
+	$currentLevel=$this->db->query("select current_level_of_manager as cl from leaves where id=$id ")->row();
+	if(($currentLevel->cl) != 1){
+	    $nextLevel=$currentLevel->cl - 1;
+		$data = array(
+			'current_level_of_manager' => $nextLevel
+			);
+		$this->db->where('id',$id);	
+		$this->db->update('leaves',$data);
+		return $nextLevel;
+	
+	} else {
+		return -1;
+		}
+	}
+
+
+
 
     /**
      * Count leave requests submitted to the connected user (or if delegate of a manager)
